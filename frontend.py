@@ -3,7 +3,7 @@ import requests
 
 #specify the FastAPI URL containing the predict path
 #Note: this will access the predict api path created in app.py
-API_URL = "http://localhost:8501/predict"
+API_URL = "http://localhost:8000/predict"
 
 st.title("Insurance Premium Category Predictor")
 st.markdown("Enter your details below:")
@@ -30,21 +30,19 @@ if st.button("Predict Premium Category"):
     }
 
     try:
-        #send post request to /predict API using input data as json
+        #send post request to /predict API in FastAPI server using input data as json
         response = requests.post(API_URL, json=input_data)
-        #store the result response
-        result = response.json()
-        print(result)
-
-        #if we received correct response, display the same
-        if response.status_code == 200 and "response" in result:
-            prediction = result['response']
-            st.success(f"Predicted Insurance premium category: **{prediction}")
+        
+        #if we received correct response, display the same, as per our FastAPI predict function definition, we should get a status code of 200 and the predicted insurance category 
+        if response.status_code == 200:
+            result = response.json()
+            st.success(f"Predicted Insurance Premium Category: **{result['predicted_category']}**")
         
         else:
-            st.error(f"API Error: {response.status_code}")
-            st.write(result)
-
+            #print out the error status code (which will be different than 200) after removing the error text message
+            st.error(f"API Error: {response.status_code} - {response.text}")
+            
     
     except requests.exceptions.ConnectionError:
-        st.error("Could not connect to FastAPI server, make sure its running correctly")
+        #error indicates FastAPI server was not started prior to running the streamlit app
+        st.error("Could not connect to FastAPI server, make sure FastAPI is already running on port 8000")
